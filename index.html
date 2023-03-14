@@ -83,7 +83,15 @@ class Sphere
     // a quadratic equation and return the t value of the ray for that point
     // If two solutions exist return the minus solution
     // If no solutions exist return -1
-    rayIntersects(ray)  {}
+    rayIntersects(ray)  {
+        let a = ray.direction.dot(ray.direction)
+        let co = ray.origin.minus(this.centre)
+        let b = ray.direction.scale(2).dot(co)
+        let c = co.dot(co)-this.radius*this.radius
+        let ex = b*b - 4*a *c
+        if(ex<0)return -1
+        return (-b-Math.sqrt(ex))/(2*a)
+    }
 }
 
 // Ray which has an origin and direction, both are Vec3s
@@ -98,7 +106,7 @@ class Ray
     // Calculate and return the point in space (a Vec3) for this ray for the given value of t
     pointAt(t) 
     {
-        return this.origin.add(this.direction.scalar(t))
+        return this.origin.add(this.direction.scale(t))
     }
 }
 
@@ -122,8 +130,8 @@ class RayCastResult
 function hit(ray, t, sphereIndex) 
 {
     let pos = ray.pointAt(t)
-    let normal = pos.minus(spheres[sphereIndex].centre).normalised()
-    return new RayCastResult(pos,normal,t,sphereIndex)
+    let normal = pos.minus(spheres[sphereIndex].centre)
+    return new RayCastResult(0,0,t,sphereIndex)
 }
 
 // Return a RayCastResult when a ray misses everything in the scene
@@ -135,7 +143,12 @@ function miss()
 // Check whether a ray hits anything in the scene and return a RayCast Result
 function traceRay(ray)
 {
-    
+    for(let i = 0;i<spheres.length;i++){
+        let t = spheres[i].rayIntersects(ray)
+        if(t!=-1){
+            return hit(ray,t,i)
+        }
+    }
     return miss()
 }
 
