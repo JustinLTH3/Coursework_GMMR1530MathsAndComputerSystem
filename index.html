@@ -3,7 +3,7 @@
 
 <body>
 
-<canvas id="canvas" width="400" height="300" style="border:1px solid#000000;">
+<canvas id="canvas" width="800" height="600" style="border:1px solid#000000;">
 Your browser does not support the HTML canvas tag.
 </canvas>
 
@@ -23,27 +23,41 @@ class Vec3
     // Add other vector to this one and return the result
     add(other)
     {
-        return new Vec3(this.x + other.x, this.y + other.y, this.z + other.z)
+        this.x += other.x
+        this.y += other.y
+        this.z += other.z
+        return this
+    }
+    static add(a,b){
+        return new Vec3(a.x + b.x, a.y + b.y, a.z + b.z)
     }
 
     // Subtract other vector from this one and return the result
     minus(other){
-        return new Vec3(this.x - other.x, this.y - other.y, this.z - other.z)
+        this.x -= other.x
+        this.y -= other.y
+        this.z -= other.z
+        return this
     }
-
-    // Multiply other vector by this one and return the result
-    multiply(other){
-        return 
+    static minus(a,b){
+        return new Vec3(a.x - b.x, a.y - b.y, a.z - b.z)
     }
-
     // Scale this vector by the number scalar and return the result
-    scale(scalar){
-        return new Vec3(this.x*scalar,this.y*scalar,this.z*scalar)
+    scale(scalar)
+    {
+        this.x *= scalar
+        this.y *= scalar
+        this.z *= scalar
+        return this
+    }
+    static scale(vec,scalar)
+    {
+        return new Vec3(vec.x * scalar, vec.y * scalar, vec.z * scalar)
     }
     
     // Calculate the dot product of this vector with the other and return the result
     dot(other) {
-        return this.x*other.x + this.y*other.y+this.z*other.z
+        return this.x * other.x + this.y * other.y + this.z * other.z
     }
 
     // Calculate and return the magnitude of this vector
@@ -53,13 +67,18 @@ class Vec3
     
     // Calculate and return the magnitude of this vector without the square root
     magnitudeSquared() {
-        return this.x*this.x+this.y*this.y+this.z*this.z
+        return this.x * this.x + this.y * this.y + this.z * this.z
     }
 
     // Return a normalised version of this vector
     normalised() {
         let mag = this.magnitude()
         return this.scale(1/mag)
+    }
+    static normalised(vec)
+    {
+        let mag = vec.magnitude()
+        return Vec3.scale(vec, 1/mag)
     }
     cross(other){
         let nx = this.y * other.z - other.y*this.z
@@ -85,12 +104,12 @@ class Sphere
     // If no solutions exist return -1
     rayIntersects(ray)  {
         let a = ray.direction.dot(ray.direction)
-        let co = ray.origin.minus(this.centre)
-        let b = ray.direction.scale(2).dot(co)
-        let c = co.dot(co)-this.radius*this.radius
-        let ex = b*b - 4*a *c
-        if(ex<0)return -1
-        return (-b-Math.sqrt(ex))/(2*a)
+        let co = Vec3.minus(ray.origin, this.centre)
+        let b = Vec3.scale(ray.direction,2).dot(co)
+        let c = co.dot(co) - this.radius * this.radius
+        let ex = b*b - 4*a*c
+        if(ex < 0)return -1
+        return (-b - Math.sqrt(ex))/(2 * a)
     }
 }
 
@@ -106,7 +125,7 @@ class Ray
     // Calculate and return the point in space (a Vec3) for this ray for the given value of t
     pointAt(t) 
     {
-        return this.origin.add(this.direction.scale(t))
+        return Vec3.scale(this.direction,t).add(this.origin)
     }
 }
 
@@ -130,14 +149,14 @@ class RayCastResult
 function hit(ray, t, sphereIndex) 
 {
     let pos = ray.pointAt(t)
-    let normal = pos.minus(spheres[sphereIndex].centre).normalised()
+    let normal = Vec3.minus(pos,spheres[sphereIndex].centre).normalised()
     return new RayCastResult(pos,normal,t,sphereIndex)
 }
 
 // Return a RayCastResult when a ray misses everything in the scene
 function miss()
 {
-    return new RayCastResult(new Vec3(0,0,0), new Vec3(0,0,0), -1, -1)
+    return new RayCastResult(null, null, -1, -1)
 }
 
 // Check whether a ray hits anything in the scene and return a RayCast Result
@@ -147,25 +166,25 @@ function traceRay(ray)
     let t = 10000
     for(let i = 0;i<spheres.length;i++){
         let _t = spheres[i].rayIntersects(ray)
-        if(_t>0&&_t<t){
+        if(_t > 0 && _t < t){
             index = i
             t = _t
         }
     }
-    if(index<0)return miss()
-    return hit(ray,t,index)
+    if(index < 0)return miss()
+    return hit(ray, t, index)
 }
 
 // Calculate and return the background colour based on the ray
 function backgroundColour(ray)
 {
-    let white = new Vec3(1,1,1)
-    let blue = new Vec3(0.3,0.5,0.9)
-    t = .5*(ray.direction.y+1.0)
+    let white = new Vec3(1, 1, 1)
+    let blue = new Vec3(0.3, 0.5, 0.9)
+    t = .5*(ray.direction.y + 1.0)
     return white.scale(1-t).add(blue.scale(t)) // Blue
 }
-let lightDir = new Vec3(-1,-1,-1)
-let negLightDir = lightDir.scale(-1)
+let lightDir = new Vec3(-1.1, -1.3, -1.5).normalised()
+let negLightDir = Vec3.scale(lightDir, -1)
 // Returns the colour the ray should have as a Vec3 with RGB values in [0,1]
 function rayColour(ray) 
 {
@@ -175,9 +194,14 @@ function rayColour(ray)
 
     let diffuse = Math.max(castResult.normal.dot(negLightDir),0)
     let shadowtrace = traceRay(new Ray(castResult.position,negLightDir))
-    let shadowScale = shadowtrace.t>0?0.4:1
+    let shadowScale = shadowtrace.t > 0 ? 0.4:1
 
-    return spheres[castResult.sphereIndex].colour.scale(diffuse).scale(shadowScale)
+    let reflectionDir = Vec3.scale(castResult.normal,negLightDir.dot(castResult.normal)*2).add(lightDir).minus(castResult.position).normalised()
+    
+    
+    let spec = Math.pow(Math.max(Vec3.scale(ray.direction,-1).normalised().dot(reflectionDir), 0), 32)
+
+    return Vec3.scale(spheres[castResult.sphereIndex].colour,diffuse * shadowScale+spec * .8)
 }
 
 // Sets a pixel at (x, y) in the canvas with an RGB Vec3
@@ -185,7 +209,7 @@ function setPixel(x, y, colour)
 {
     var c = document.getElementById("canvas")
     var ctx = c.getContext("2d")
-    ctx.fillStyle = "rgba("+colour.x+","+colour.y+","+colour.z+","+1+")"
+    ctx.fillStyle = `rgba(${colour.x}, ${colour.y}, ${colour.z}, 1)`
     ctx.fillRect(x, c.height - y, 1, 1)
 }
 
@@ -208,7 +232,7 @@ let focalLength = 1.0
 let cameraPos = new Vec3(0,0,0)
 let horizontal = new Vec3(viewportWidth,0,0)
 let vertical = new Vec3(0, viewportHeight,0)
-let lowerLeftCorner = cameraPos.minus(horizontal.scale(.5)).minus(vertical.scale(.5)).minus(new Vec3(0,0,focalLength))
+let lowerLeftCorner = new Vec3(0,0,-focalLength).add(Vec3.minus(cameraPos,Vec3.scale(horizontal,.5).add(Vec3.scale(vertical,.5))))
 
 let sampling = 50
 for (let i = 0; i < imageWidth; i++)
@@ -220,8 +244,8 @@ for (let i = 0; i < imageWidth; i++)
         {
             let u = (i+Math.random())/(imageWidth-1)
             let v = (j+Math.random())/(imageHeight-1)
-            let ray = new Ray(cameraPos,lowerLeftCorner.minus(cameraPos).add(horizontal.scale(u)).add(vertical.scale(v)))
-            colour=colour.add(rayColour(ray))
+            let ray = new Ray(cameraPos,Vec3.minus(lowerLeftCorner,cameraPos).add(Vec3.scale(horizontal,u)).add(Vec3.scale(vertical,v)))
+            colour.add(rayColour(ray))
         }
         let scale = 1/sampling
         
