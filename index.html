@@ -86,6 +86,15 @@ class Vec3
         let nz = this.x * other .y - this.y * other.x
         return new Vec3(nx,ny,nz)
     }
+    zero(){
+        this.x=0
+        this.y=0
+        this.z=0
+    }
+    static reflect(i, normal)
+    {
+        return Vec3.scale(normal,Vec3.scale(i,-1).dot(normal)*2).add(i)
+    }
 }
 
 // A sphere in 3D space. Has centre, radius and colour all of which are Vec3s
@@ -143,6 +152,7 @@ class RayCastResult
         this.t = t
         this.sphereIndex = sphereIndex
     }
+    static miss = new RayCastResult(null,null,-1,null)
 }
 
 // Calculate the intersection point and normal when a ray hits a sphere. Returns a RayCastResult.
@@ -156,7 +166,7 @@ function hit(ray, t, sphereIndex)
 // Return a RayCastResult when a ray misses everything in the scene
 function miss()
 {
-    return new RayCastResult(null, null, -1, -1)
+    return RayCastResult.miss
 }
 
 // Check whether a ray hits anything in the scene and return a RayCast Result
@@ -196,7 +206,7 @@ function rayColour(ray)
     let shadowtrace = traceRay(new Ray(castResult.position,negLightDir))
     let shadowScale = shadowtrace.t > 0 ? 0.4:1
 
-    let reflectionDir = Vec3.scale(castResult.normal,negLightDir.dot(castResult.normal)*2).add(lightDir).minus(castResult.position).normalised()
+    let reflectionDir = Vec3.reflect(lightDir,castResult.normal).minus(castResult.position).normalised()
     
     
     let spec = Math.pow(Math.max(Vec3.scale(ray.direction,-1).normalised().dot(reflectionDir), 0), 32)
@@ -235,16 +245,17 @@ let vertical = new Vec3(0, viewportHeight,0)
 let lowerLeftCorner = new Vec3(0,0,-focalLength).add(Vec3.minus(cameraPos,Vec3.scale(horizontal,.5).add(Vec3.scale(vertical,.5))))
 
 let sampling = 50
+let colour = new Vec3(0,0,0)
 for (let i = 0; i < imageWidth; i++)
 {
     for (let j = 0; j <= imageHeight; j++)
     {
-        let colour = new Vec3(0,0,0)
+        colour.zero()
         for(let k =0;k<sampling;k++)
         {
-            let u = (i+Math.random())/(imageWidth-1)
+            let u = (i+Math.random()-.5)/(imageWidth-1)
             let v = (j+Math.random())/(imageHeight-1)
-            let ray = new Ray(cameraPos,Vec3.minus(lowerLeftCorner,cameraPos).add(Vec3.scale(horizontal,u)).add(Vec3.scale(vertical,v)))
+            let ray = new Ray(cameraPos,Vec3.scale(horizontal,u).add(lowerLeftCorner).minus(cameraPos).add(Vec3.scale(vertical,v)))
             colour.add(rayColour(ray))
         }
         let scale = 1/sampling
