@@ -168,24 +168,20 @@ function hit(ray, t, sphereIndex)
 }
 
 // Return a RayCastResult when a ray misses everything in the scene
-function miss()
-{
-    return RayCastResult.miss
-}
 
 // Check whether a ray hits anything in the scene and return a RayCast Result
 function traceRay(ray)
 {
     let index = -1
     let t = 10000
-    for(let i = 0;i<spheres.length;i++){
+    for(let i = 0; i < spheres.length; i++){
         let _t = spheres[i].rayIntersects(ray)
         if(_t > 0 && _t < t){
             index = i
             t = _t
         }
     }
-    return index < 0 ? miss() : hit(ray, t, index)
+    return index < 0 ? RayCastResult.miss : hit(ray, t, index)
 }
 
 // Calculate and return the background colour based on the ray
