@@ -28,18 +28,21 @@ class Vec3
         this.z += other.z
         return this
     }
-    static add(a,b){
+    static add(a,b)
+    {
         return new Vec3(a.x + b.x, a.y + b.y, a.z + b.z)
     }
 
     // Subtract other vector from this one and return the result
-    minus(other){
+    minus(other)
+    {
         this.x -= other.x
         this.y -= other.y
         this.z -= other.z
         return this
     }
-    static minus(a,b){
+    static minus(a,b)
+    {
         return new Vec3(a.x - b.x, a.y - b.y, a.z - b.z)
     }
     // Scale this vector by the number scalar and return the result
@@ -56,22 +59,26 @@ class Vec3
     }
     
     // Calculate the dot product of this vector with the other and return the result
-    dot(other) {
+    dot(other) 
+    {
         return this.x * other.x + this.y * other.y + this.z * other.z
     }
 
     // Calculate and return the magnitude of this vector
-    magnitude() {
+    magnitude() 
+    {
         return Math.sqrt(this.magnitudeSquared())
     }
     
     // Calculate and return the magnitude of this vector without the square root
-    magnitudeSquared() {
+    magnitudeSquared() 
+    {
         return this.x * this.x + this.y * this.y + this.z * this.z
     }
 
     // Return a normalised version of this vector
-    normalised() {
+    normalised() 
+    {
         let mag = this.magnitude()
         return this.scale(1/mag)
     }
@@ -80,13 +87,15 @@ class Vec3
         let mag = vec.magnitude()
         return Vec3.scale(vec, 1/mag)
     }
-    cross(other){
+    cross(other)
+    {
         let nx = this.y * other.z - this.z * other.y
         let ny = this.z * other.x - this.x * other.z
         let nz = this.x * other.y - this.y * other.x
         return new Vec3(nx,ny,nz)
     }
-    zero(){
+    zero()
+    {
         this.x = 0
         this.y = 0
         this.z = 0
@@ -106,7 +115,8 @@ class Sphere
         this.radius = radius
         this.colour = colour
     }
-    rayIntersects(ray)  {
+    rayIntersects(ray)  
+    {
         let a = ray.direction.dot(ray.direction)
         let co = Vec3.minus(ray.origin, this.centre)
         let b = Vec3.scale(ray.direction, 2).dot(co)
@@ -175,8 +185,7 @@ function traceRay(ray)
             t = _t
         }
     }
-    if(index < 0)return miss()
-    return hit(ray, t, index)
+    return index < 0 ? miss() : hit(ray, t, index)
 }
 
 // Calculate and return the background colour based on the ray
@@ -200,10 +209,10 @@ function rayColour(ray)
     let shadowtrace = traceRay(new Ray(castResult.position,negLightDir))
     let shadowScale = shadowtrace.t > 0 ? 0.4:1
 
-    let reflectionDir = Vec3.reflect(lightDir,castResult.normal).minus(castResult.position).normalised()
+    let reflectionDir = Vec3.reflect(lightDir, castResult.normal).minus(castResult.position).normalised()
     
     
-    let spec = Math.pow(Math.max(Vec3.scale(ray.direction,-1).normalised().dot(reflectionDir), 0), 32)
+    let spec = Math.pow(Math.max(Vec3.scale(ray.direction, -1).normalised().dot(reflectionDir), 0), 32)
 
     return Vec3.scale(spheres[castResult.sphereIndex].colour,0.05+ diffuse * shadowScale+spec * .8)
 }
