@@ -81,15 +81,15 @@ class Vec3
         return Vec3.scale(vec, 1/mag)
     }
     cross(other){
-        let nx = this.y * other.z - other.y*this.z
-        let ny = this.z * other.x - this.x*other.z
-        let nz = this.x * other .y - this.y * other.x
+        let nx = this.y * other.z - this.z * other.y
+        let ny = this.z * other.x - this.x * other.z
+        let nz = this.x * other.y - this.y * other.x
         return new Vec3(nx,ny,nz)
     }
     zero(){
-        this.x=0
-        this.y=0
-        this.z=0
+        this.x = 0
+        this.y = 0
+        this.z = 0
     }
     static reflect(i, normal)
     {
@@ -106,17 +106,12 @@ class Sphere
         this.radius = radius
         this.colour = colour
     }
-
-    // Calculate the point on the sphere  where the ray intersects using 
-    // a quadratic equation and return the t value of the ray for that point
-    // If two solutions exist return the minus solution
-    // If no solutions exist return -1
     rayIntersects(ray)  {
         let a = ray.direction.dot(ray.direction)
         let co = Vec3.minus(ray.origin, this.centre)
         let b = Vec3.scale(ray.direction,2).dot(co)
         let c = co.dot(co) - this.radius * this.radius
-        let ex = b*b - 4*a*c
+        let ex = b * b - 4 * a * c
         if(ex < 0)return -1
         return (-b - Math.sqrt(ex))/(2 * a)
     }
@@ -160,7 +155,7 @@ function hit(ray, t, sphereIndex)
 {
     let pos = ray.pointAt(t)
     let normal = Vec3.minus(pos,spheres[sphereIndex].centre).normalised()
-    return new RayCastResult(pos,normal,t,sphereIndex)
+    return new RayCastResult(pos, normal, t, sphereIndex)
 }
 
 // Return a RayCastResult when a ray misses everything in the scene
@@ -211,16 +206,14 @@ function rayColour(ray)
     
     let spec = Math.pow(Math.max(Vec3.scale(ray.direction,-1).normalised().dot(reflectionDir), 0), 32)
 
-    return Vec3.scale(spheres[castResult.sphereIndex].colour,diffuse * shadowScale+spec * .8)
+    return Vec3.scale(spheres[castResult.sphereIndex].colour,0.05+ diffuse * shadowScale+spec * .8)
 }
-
-// Sets a pixel at (x, y) in the canvas with an RGB Vec3
+const canvas =  document.getElementById("canvas")
+const ctx = canvas.getContext("2d")
 function setPixel(x, y, colour)
 {
-    var c = document.getElementById("canvas")
-    var ctx = c.getContext("2d")
     ctx.fillStyle = `rgba(${colour.x}, ${colour.y}, ${colour.z}, 1)`
-    ctx.fillRect(x, c.height - y, 1, 1)
+    ctx.fillRect(x, canvas.height - y, 1, 1)
 }
 
 const spheres = new Array(
@@ -242,29 +235,29 @@ let focalLength = 1.0
 let cameraPos = new Vec3(0,0,0)
 let horizontal = new Vec3(viewportWidth,0,0)
 let vertical = new Vec3(0, viewportHeight,0)
-let lowerLeftCorner = new Vec3(0,0,-focalLength).add(Vec3.minus(cameraPos,Vec3.scale(horizontal,.5).add(Vec3.scale(vertical,.5))))
+let lowerLeftCorner = new Vec3(0, 0, -focalLength).add(Vec3.minus(cameraPos, Vec3.scale(horizontal, .5).add(Vec3.scale(vertical, .5))))
 
 let sampling = 50
-let colour = new Vec3(0,0,0)
+let colour = new Vec3(0, 0, 0)
 for (let i = 0; i < imageWidth; i++)
 {
     for (let j = 0; j <= imageHeight; j++)
     {
         colour.zero()
-        for(let k =0;k<sampling;k++)
+        for(let k =0; k < sampling; k++)
         {
-            let u = (i+Math.random()-.5)/(imageWidth-1)
-            let v = (j+Math.random())/(imageHeight-1)
-            let ray = new Ray(cameraPos,Vec3.scale(horizontal,u).add(lowerLeftCorner).minus(cameraPos).add(Vec3.scale(vertical,v)))
+            let u = (i + Math.random()) / (imageWidth - 1)
+            let v = (j + Math.random()) / (imageHeight - 1)
+            let ray = new Ray(cameraPos, Vec3.scale(horizontal, u).add(lowerLeftCorner).minus(cameraPos).add(Vec3.scale(vertical,v)))
             colour.add(rayColour(ray))
         }
-        let scale = 1/sampling
+        let scale = 1 / sampling
         
-        colour.x = Math.sqrt(scale*colour.x)*255
-        colour.y = Math.sqrt(scale*colour.y)*255
-        colour.z = Math.sqrt(scale*colour.z)*255
+        colour.x = Math.sqrt(scale * colour.x) * 255
+        colour.y = Math.sqrt(scale * colour.y) * 255
+        colour.z = Math.sqrt(scale * colour.z) * 255
         
-        setPixel(i,j,colour)
+        setPixel(i, j, colour)
     }
 }
 
