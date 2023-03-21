@@ -3,7 +3,7 @@
 
 <body>
 
-<canvas id="canvas" width="800" height="600" style="border:1px solid#000000;">
+<canvas id="canvas" width="400" height="300" style="border:1px solid#000000;">
 Your browser does not support the HTML canvas tag.
 </canvas>
 
@@ -93,7 +93,7 @@ class Vec3
     }
     static reflect(i, normal)
     {
-        return Vec3.scale(normal,Vec3.scale(i,-1).dot(normal)*2).add(i)
+        return Vec3.scale(normal,Vec3.scale(i, -1).dot(normal) * 2).add(i)
     }
 }
 
@@ -109,11 +109,10 @@ class Sphere
     rayIntersects(ray)  {
         let a = ray.direction.dot(ray.direction)
         let co = Vec3.minus(ray.origin, this.centre)
-        let b = Vec3.scale(ray.direction,2).dot(co)
+        let b = Vec3.scale(ray.direction, 2).dot(co)
         let c = co.dot(co) - this.radius * this.radius
         let ex = b * b - 4 * a * c
-        if(ex < 0)return -1
-        return (-b - Math.sqrt(ex))/(2 * a)
+        return ex < 0 ? -1 : (-b - Math.sqrt(ex))/(2 * a)
     }
 }
 
@@ -129,7 +128,7 @@ class Ray
     // Calculate and return the point in space (a Vec3) for this ray for the given value of t
     pointAt(t) 
     {
-        return Vec3.scale(this.direction,t).add(this.origin)
+        return Vec3.scale(this.direction, t).add(this.origin)
     }
 }
 
@@ -147,7 +146,7 @@ class RayCastResult
         this.t = t
         this.sphereIndex = sphereIndex
     }
-    static miss = new RayCastResult(null,null,-1,null)
+    static  miss = new RayCastResult(null,null,-1,null)
 }
 
 // Calculate the intersection point and normal when a ray hits a sphere. Returns a RayCastResult.
@@ -185,7 +184,7 @@ function backgroundColour(ray)
 {
     let white = new Vec3(1, 1, 1)
     let blue = new Vec3(0.3, 0.5, 0.9)
-    t = .5*(ray.direction.y + 1.0)
+    t = .5 * (ray.direction.y + 1.0)
     return white.scale(1-t).add(blue.scale(t)) // Blue
 }
 let lightDir = new Vec3(-1.1, -1.3, -1.5).normalised()
@@ -252,7 +251,7 @@ for (let i = 0; i < imageWidth; i++)
             colour.add(rayColour(ray))
         }
         let scale = 1 / sampling
-        
+
         colour.x = Math.sqrt(scale * colour.x) * 255
         colour.y = Math.sqrt(scale * colour.y) * 255
         colour.z = Math.sqrt(scale * colour.z) * 255
